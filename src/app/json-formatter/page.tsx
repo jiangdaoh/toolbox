@@ -1,5 +1,5 @@
 "use client";
-import { useState, useCallback, useDeferredValue } from "react";
+import { useState, useMemo, useDeferredValue } from "react";
 import ToolLayout from "@/components/ToolLayout";
 import CopyButton from "@/components/CopyButton";
 
@@ -8,7 +8,7 @@ export default function JsonFormatter() {
   const [indent, setIndent] = useState(2);
   const deferredInput = useDeferredValue(input);
 
-  const result = useCallback(() => {
+  const { output, error } = useMemo(() => {
     if (!deferredInput.trim()) return { output: "", error: "" };
     try {
       const parsed = JSON.parse(deferredInput);
@@ -18,9 +18,7 @@ export default function JsonFormatter() {
     }
   }, [deferredInput, indent]);
 
-  const { output, error } = result();
-
-  const minified = useCallback(() => {
+  const minified = useMemo(() => {
     try { return JSON.stringify(JSON.parse(deferredInput)); } catch { return ""; }
   }, [deferredInput]);
 
@@ -53,7 +51,7 @@ export default function JsonFormatter() {
                 <option value={4}>4 spaces</option>
                 <option value={1}>1 space</option>
               </select>
-              <CopyButton text={output || minified()} />
+              <CopyButton text={output || minified} />
             </div>
           </div>
           <textarea
@@ -70,7 +68,7 @@ export default function JsonFormatter() {
       </div>
       {output && (
         <div className="flex gap-2 mt-3">
-          <CopyButton text={JSON.stringify(JSON.parse(input))} label="Copy Minified" />
+          <CopyButton text={minified} label="Copy Minified" />
         </div>
       )}
     </ToolLayout>

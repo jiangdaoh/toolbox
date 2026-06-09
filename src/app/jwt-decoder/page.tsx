@@ -1,5 +1,5 @@
 "use client";
-import { useState, useDeferredValue, useCallback } from "react";
+import { useState, useDeferredValue, useMemo } from "react";
 import ToolLayout from "@/components/ToolLayout";
 import CopyButton from "@/components/CopyButton";
 
@@ -12,7 +12,7 @@ export default function JwtDecoder() {
   const [input, setInput] = useState("");
   const deferred = useDeferredValue(input);
 
-  const result = useCallback(() => {
+  const data = useMemo(() => {
     if (!deferred.trim()) return null;
     const parts = deferred.trim().split(".");
     if (parts.length !== 3) return { error: "Invalid JWT: expected 3 parts separated by dots" };
@@ -27,8 +27,6 @@ export default function JwtDecoder() {
       return { error: `Decode error: ${(e as Error).message}` };
     }
   }, [deferred]);
-
-  const data = result();
 
   return (
     <ToolLayout slug="jwt-decoder">

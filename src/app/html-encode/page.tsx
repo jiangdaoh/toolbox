@@ -1,5 +1,5 @@
 "use client";
-import { useState, useDeferredValue, useCallback } from "react";
+import { useState, useDeferredValue, useMemo } from "react";
 import ToolLayout from "@/components/ToolLayout";
 import CopyButton from "@/components/CopyButton";
 
@@ -11,7 +11,7 @@ export default function HtmlEncode() {
   const [mode, setMode] = useState<"encode" | "decode">("encode");
   const deferredInput = useDeferredValue(input);
 
-  const output = useCallback(() => {
+  const output = useMemo(() => {
     if (!deferredInput) return "";
     if (mode === "encode") {
       return deferredInput.replace(/[&<>"']/g, (c) => entities[c] || c);
@@ -39,9 +39,9 @@ export default function HtmlEncode() {
         <div>
           <div className="flex items-center justify-between mb-1.5">
             <label className="text-xs font-medium text-gray-500">Output</label>
-            <CopyButton text={output()} />
+            <CopyButton text={output} />
           </div>
-          <textarea className="w-full h-48 p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-sm resize-y" value={output()} readOnly />
+          <textarea className="w-full h-48 p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-sm resize-y" value={output} readOnly />
         </div>
       </div>
     </ToolLayout>

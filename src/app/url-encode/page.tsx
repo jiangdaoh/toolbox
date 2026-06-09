@@ -1,5 +1,5 @@
 "use client";
-import { useState, useDeferredValue, useCallback } from "react";
+import { useState, useDeferredValue, useMemo } from "react";
 import ToolLayout from "@/components/ToolLayout";
 import CopyButton from "@/components/CopyButton";
 
@@ -8,7 +8,7 @@ export default function UrlEncode() {
   const [mode, setMode] = useState<"encode" | "decode">("encode");
   const deferredInput = useDeferredValue(input);
 
-  const output = useCallback(() => {
+  const { text, error } = useMemo(() => {
     if (!deferredInput) return { text: "", error: "" };
     try {
       return { text: mode === "encode" ? encodeURIComponent(deferredInput) : decodeURIComponent(deferredInput), error: "" };
@@ -17,19 +17,11 @@ export default function UrlEncode() {
     }
   }, [deferredInput, mode]);
 
-  const { text, error } = output();
-
   return (
     <ToolLayout slug="url-encode">
       <div className="flex gap-1 mb-4">
         {(["encode", "decode"] as const).map((m) => (
-          <button
-            key={m}
-            onClick={() => setMode(m)}
-            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
-              mode === m ? "bg-blue-600 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
-            }`}
-          >
+          <button key={m} onClick={() => setMode(m)} className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${mode === m ? "bg-blue-600 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"}`}>
             {m === "encode" ? "Encode" : "Decode"}
           </button>
         ))}
@@ -54,9 +46,7 @@ export default function UrlEncode() {
             <CopyButton text={text} />
           </div>
           <textarea
-            className={`w-full h-40 p-3 rounded-lg border text-sm resize-y outline-none ${
-              error ? "border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20" : "border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900"
-            }`}
+            className={`w-full h-40 p-3 rounded-lg border text-sm resize-y outline-none ${error ? "border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20" : "border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900"}`}
             value={error ? `Error: ${error}` : text}
             readOnly
             spellCheck={false}

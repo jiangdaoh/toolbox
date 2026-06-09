@@ -18,7 +18,6 @@ export const categories = [
   { id: "crypto", name: "Crypto & Hash", icon: "🛡️" },
 ] as const;
 
-export type CategoryId = (typeof categories)[number]["id"];
 
 export const tools: Tool[] = [
   // Encoders

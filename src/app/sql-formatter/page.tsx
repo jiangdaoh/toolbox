@@ -1,9 +1,7 @@
 "use client";
-import { useState, useDeferredValue, useCallback } from "react";
+import { useState, useDeferredValue, useMemo } from "react";
 import ToolLayout from "@/components/ToolLayout";
 import CopyButton from "@/components/CopyButton";
-
-const keywords = ["SELECT", "FROM", "WHERE", "AND", "OR", "ORDER BY", "GROUP BY", "HAVING", "LIMIT", "OFFSET", "JOIN", "LEFT JOIN", "RIGHT JOIN", "INNER JOIN", "OUTER JOIN", "ON", "INSERT INTO", "VALUES", "UPDATE", "SET", "DELETE FROM", "CREATE TABLE", "ALTER TABLE", "DROP TABLE", "AS", "IN", "NOT IN", "BETWEEN", "LIKE", "IS NULL", "IS NOT NULL", "CASE", "WHEN", "THEN", "ELSE", "END", "UNION", "UNION ALL", "DISTINCT", "COUNT", "SUM", "AVG", "MIN", "MAX"];
 
 function formatSql(sql: string, indent: number = 2): string {
   let formatted = sql.replace(/\s+/g, " ").trim();
@@ -33,7 +31,7 @@ export default function SqlFormatter() {
   const [indent, setIndent] = useState(2);
   const deferredInput = useDeferredValue(input);
 
-  const output = useCallback(() => {
+  const output = useMemo(() => {
     if (!deferredInput.trim()) return "";
     return formatSql(deferredInput, indent);
   }, [deferredInput, indent]);
@@ -62,11 +60,11 @@ export default function SqlFormatter() {
                 <option value={4}>4 spaces</option>
                 <option value={1}>Tab</option>
               </select>
-              <CopyButton text={output()} />
+              <CopyButton text={output} />
             </div>
           </div>
           <pre className="w-full h-72 p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 font-mono text-sm overflow-auto whitespace-pre-wrap">
-            {output()}
+            {output}
           </pre>
         </div>
       </div>

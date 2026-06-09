@@ -1,5 +1,5 @@
 "use client";
-import { useState, useDeferredValue, useCallback } from "react";
+import { useState, useDeferredValue, useMemo } from "react";
 import ToolLayout from "@/components/ToolLayout";
 import CopyButton from "@/components/CopyButton";
 
@@ -8,7 +8,7 @@ export default function Base64Tool() {
   const [mode, setMode] = useState<"encode" | "decode">("encode");
   const deferredInput = useDeferredValue(input);
 
-  const output = useCallback(() => {
+  const { text, error } = useMemo(() => {
     if (!deferredInput) return { text: "", error: "" };
     try {
       if (mode === "encode") return { text: btoa(unescape(encodeURIComponent(deferredInput))), error: "" };
@@ -17,8 +17,6 @@ export default function Base64Tool() {
       return { text: "", error: (e as Error).message };
     }
   }, [deferredInput, mode]);
-
-  const { text, error } = output();
 
   return (
     <ToolLayout slug="base64">

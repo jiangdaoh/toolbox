@@ -84,6 +84,13 @@ function mdToHtml(md: string): string {
   return `<p class="my-2">${html}</p>`;
 }
 
+function sanitize(html: string): string {
+  return html
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
+    .replace(/\s*on\w+\s*=\s*["'][^"']*["']/gi, "")
+    .replace(/javascript:/gi, "");
+}
+
 export default function MarkdownPreview() {
   const [md, setMd] = useState(defaultMd);
 
@@ -106,7 +113,7 @@ export default function MarkdownPreview() {
           <label className="text-xs font-medium text-gray-500 mb-1.5 block">Preview</label>
           <div
             className="w-full h-[28rem] p-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-auto prose prose-sm dark:prose-invert max-w-none leading-relaxed"
-            dangerouslySetInnerHTML={{ __html: mdToHtml(md) }}
+            dangerouslySetInnerHTML={{ __html: sanitize(mdToHtml(md)) }}
           />
         </div>
       </div>
