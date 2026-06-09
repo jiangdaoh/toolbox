@@ -51,14 +51,6 @@ export default function ToolLayout({ slug, children }: ToolLayoutProps) {
           </div>
         </div>
       )}
-
-      <div className="mt-8 p-4 rounded-lg bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800">
-        <h2 className="font-semibold mb-2">About {tool.name}</h2>
-        <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
-          This {tool.name.toLowerCase()} runs entirely in your browser. No data is sent to any server — your privacy is guaranteed.
-          It&apos;s free to use with no limits or signup required.
-        </p>
-      </div>
     </div>
   );
 }
