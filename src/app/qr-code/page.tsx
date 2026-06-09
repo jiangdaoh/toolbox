@@ -1,48 +1,78 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import QRCode from "qrcode";
+import ToolLayout from "@/components/ToolLayout";
 
 export default function QRCodeGenerator() {
-  const [text, setText] = useState("https://example.com");
+  const [text, setText] = useState("https://github.com");
   const [size, setSize] = useState(256);
+  const [fgColor, setFgColor] = useState("#000000");
+  const [bgColor, setBgColor] = useState("#ffffff");
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  const generate = async () => {
+  useEffect(() => {
     if (!canvasRef.current || !text) return;
-    await QRCode.toCanvas(canvasRef.current, text, { width: size, margin: 2 });
-  };
+    QRCode.toCanvas(canvasRef.current, text, {
+      width: size,
+      margin: 2,
+      color: { dark: fgColor, light: bgColor },
+    }).catch(() => {});
+  }, [text, size, fgColor, bgColor]);
 
-  const download = () => {
-    if (!canvasRef.current) return;
-    const link = document.createElement("a");
-    link.download = "qrcode.png";
-    link.href = canvasRef.current.toDataURL("image/png");
-    link.click();
+  const download = (format: "png" | "svg") => {
+    if (format === "svg") {
+      QRCode.toString(text, { type: "svg", color: { dark: fgColor, light: bgColor } }, (err, str) => {
+        if (!err) {
+          const blob = new Blob([str], { type: "image/svg+xml" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url; a.download = "qrcode.svg"; a.click();
+          URL.revokeObjectURL(url);
+        }
+      });
+    } else if (canvasRef.current) {
+      const a = document.createElement("a");
+      a.href = canvasRef.current.toDataURL("image/png");
+      a.download = "qrcode.png"; a.click();
+    }
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-2">QR Code Generator</h1>
-      <p className="text-gray-500 mb-6">Generate QR codes from any text or URL. Download as PNG.</p>
+    <ToolLayout slug="qr-code">
       <div className="flex flex-col md:flex-row gap-6">
         <div className="flex-1 space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1">Text or URL</label>
-            <textarea className="w-full h-24 p-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900 text-sm" value={text} onChange={(e) => setText(e.target.value)} placeholder="Enter text or URL..." />
+            <label className="text-xs font-medium text-gray-500 mb-1.5 block">Text or URL</label>
+            <textarea
+              className="w-full h-20 p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-sm resize-y focus:border-blue-500 outline-none transition-colors"
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              placeholder="Enter text or URL..."
+            />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Size: {size}px</label>
-            <input type="range" min={128} max={512} step={32} value={size} onChange={(e) => setSize(Number(e.target.value))} className="w-full" />
+            <label className="text-xs font-medium text-gray-500 mb-1.5 block">Size: {size}px</label>
+            <input type="range" min={128} max={512} step={32} value={size} onChange={(e) => setSize(Number(e.target.value))} className="w-full accent-blue-600" />
           </div>
-          <div className="flex gap-3">
-            <button onClick={generate} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm">Generate</button>
-            <button onClick={download} className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-sm">Download PNG</button>
+          <div className="flex gap-4">
+            <div>
+              <label className="text-xs font-medium text-gray-500 mb-1 block">Foreground</label>
+              <input type="color" value={fgColor} onChange={(e) => setFgColor(e.target.value)} className="w-10 h-10 rounded cursor-pointer border-0" />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-gray-500 mb-1 block">Background</label>
+              <input type="color" value={bgColor} onChange={(e) => setBgColor(e.target.value)} className="w-10 h-10 rounded cursor-pointer border-0" />
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <button onClick={() => download("png")} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium transition-colors">Download PNG</button>
+            <button onClick={() => download("svg")} className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-sm transition-colors">Download SVG</button>
           </div>
         </div>
-        <div className="flex items-center justify-center">
-          <canvas ref={canvasRef} className="border border-gray-200 dark:border-gray-800 rounded-lg" />
+        <div className="flex items-center justify-center p-4 bg-white rounded-xl border border-gray-200 dark:border-gray-700">
+          <canvas ref={canvasRef} />
         </div>
       </div>
-    </div>
+    </ToolLayout>
   );
 }

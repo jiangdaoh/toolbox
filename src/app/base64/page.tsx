@@ -1,48 +1,69 @@
 "use client";
-import { useState } from "react";
+import { useState, useDeferredValue, useCallback } from "react";
+import ToolLayout from "@/components/ToolLayout";
+import CopyButton from "@/components/CopyButton";
 
 export default function Base64Tool() {
   const [input, setInput] = useState("");
-  const [output, setOutput] = useState("");
   const [mode, setMode] = useState<"encode" | "decode">("encode");
-  const [error, setError] = useState("");
+  const deferredInput = useDeferredValue(input);
 
-  const process = () => {
+  const output = useCallback(() => {
+    if (!deferredInput) return { text: "", error: "" };
     try {
-      if (mode === "encode") {
-        setOutput(btoa(unescape(encodeURIComponent(input))));
-      } else {
-        setOutput(decodeURIComponent(escape(atob(input))));
-      }
-      setError("");
+      if (mode === "encode") return { text: btoa(unescape(encodeURIComponent(deferredInput))), error: "" };
+      return { text: decodeURIComponent(escape(atob(deferredInput))), error: "" };
     } catch (e) {
-      setError((e as Error).message);
-      setOutput("");
+      return { text: "", error: (e as Error).message };
     }
-  };
+  }, [deferredInput, mode]);
+
+  const { text, error } = output();
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-2">Base64 Encoder / Decoder</h1>
-      <p className="text-gray-500 mb-6">Encode and decode Base64 strings online. Supports Unicode.</p>
-      <div className="flex gap-2 mb-4">
-        <button onClick={() => setMode("encode")} className={`px-4 py-2 rounded-lg text-sm ${mode === "encode" ? "bg-blue-600 text-white" : "border border-gray-300 dark:border-gray-700"}`}>Encode</button>
-        <button onClick={() => setMode("decode")} className={`px-4 py-2 rounded-lg text-sm ${mode === "decode" ? "bg-blue-600 text-white" : "border border-gray-300 dark:border-gray-700"}`}>Decode</button>
+    <ToolLayout slug="base64">
+      <div className="flex gap-1 mb-4">
+        {(["encode", "decode"] as const).map((m) => (
+          <button
+            key={m}
+            onClick={() => setMode(m)}
+            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
+              mode === m ? "bg-blue-600 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
+            }`}
+          >
+            {m === "encode" ? "Encode" : "Decode"}
+          </button>
+        ))}
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium mb-1">Input</label>
-          <textarea className="w-full h-48 p-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900 font-mono text-sm resize-y" value={input} onChange={(e) => setInput(e.target.value)} placeholder={mode === "encode" ? "Enter text to encode..." : "Enter Base64 to decode..."} />
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="text-xs font-medium text-gray-500">Input</label>
+            <button onClick={() => setInput("")} className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">Clear</button>
+          </div>
+          <textarea
+            className="w-full h-48 p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-sm resize-y focus:border-blue-500 outline-none transition-colors"
+            placeholder={mode === "encode" ? "Enter text to encode..." : "Enter Base64 to decode..."}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            spellCheck={false}
+          />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">Output</label>
-          <textarea className="w-full h-48 p-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900 font-mono text-sm resize-y" value={error ? `Error: ${error}` : output} readOnly />
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="text-xs font-medium text-gray-500">Output</label>
+            <CopyButton text={text} />
+          </div>
+          <textarea
+            className={`w-full h-48 p-3 rounded-lg border text-sm resize-y outline-none transition-colors ${
+              error ? "border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20 text-red-600" : "border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900"
+            }`}
+            value={error ? `Error: ${error}` : text}
+            readOnly
+            spellCheck={false}
+          />
         </div>
       </div>
-      <div className="flex gap-3 mt-4">
-        <button onClick={process} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm">{mode === "encode" ? "Encode" : "Decode"}</button>
-        <button onClick={() => navigator.clipboard.writeText(output)} className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-sm">Copy</button>
-      </div>
-    </div>
+    </ToolLayout>
   );
 }

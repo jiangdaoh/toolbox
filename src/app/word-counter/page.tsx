@@ -1,5 +1,6 @@
 "use client";
 import { useState, useMemo } from "react";
+import ToolLayout from "@/components/ToolLayout";
 
 export default function WordCounter() {
   const [text, setText] = useState("");
@@ -12,35 +13,41 @@ export default function WordCounter() {
     const paragraphs = text.trim() ? text.split(/\n\n+/).filter((p) => p.trim()).length : 0;
     const lines = text.trim() ? text.split("\n").length : 0;
     const readingTime = Math.ceil(words / 200);
-    return { words, chars, charsNoSpace, sentences, paragraphs, lines, readingTime };
+    const speakingTime = Math.ceil(words / 130);
+    return { words, chars, charsNoSpace, sentences, paragraphs, lines, readingTime, speakingTime };
   }, [text]);
 
+  const statItems = [
+    ["Words", stats.words],
+    ["Characters", stats.chars],
+    ["No Spaces", stats.charsNoSpace],
+    ["Sentences", stats.sentences],
+    ["Paragraphs", stats.paragraphs],
+    ["Lines", stats.lines],
+    ["Read Time", `${stats.readingTime}m`],
+    ["Speak Time", `${stats.speakingTime}m`],
+  ] as const;
+
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-2">Word Counter</h1>
-      <p className="text-gray-500 mb-6">Count words, characters, sentences, and paragraphs in real-time.</p>
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-        {[
-          ["Words", stats.words],
-          ["Characters", stats.chars],
-          ["No Spaces", stats.charsNoSpace],
-          ["Sentences", stats.sentences],
-          ["Paragraphs", stats.paragraphs],
-          ["Lines", stats.lines],
-          ["Reading Time", `${stats.readingTime} min`],
-        ].map(([label, value]) => (
-          <div key={label as string} className="rounded-lg border border-gray-200 dark:border-gray-800 p-3 text-center">
-            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{value}</div>
-            <div className="text-xs text-gray-500">{label}</div>
+    <ToolLayout slug="word-counter">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+        {statItems.map(([label, value]) => (
+          <div key={label} className="rounded-lg border border-gray-200 dark:border-gray-700 p-3 text-center">
+            <div className="text-xl font-bold text-blue-600 dark:text-blue-400">{value}</div>
+            <div className="text-[11px] text-gray-400 mt-0.5">{label}</div>
           </div>
         ))}
       </div>
+      <div className="flex items-center justify-between mb-1.5">
+        <label className="text-xs font-medium text-gray-500">Your Text</label>
+        <button onClick={() => setText("")} className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">Clear</button>
+      </div>
       <textarea
-        className="w-full h-64 p-4 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900 text-sm resize-y"
+        className="w-full h-48 p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-sm resize-y focus:border-blue-500 outline-none transition-colors"
         placeholder="Type or paste your text here..."
         value={text}
         onChange={(e) => setText(e.target.value)}
       />
-    </div>
+    </ToolLayout>
   );
 }

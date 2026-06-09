@@ -1,76 +1,78 @@
 "use client";
-import { useState } from "react";
-import type { Metadata } from "next";
+import { useState, useCallback, useDeferredValue } from "react";
+import ToolLayout from "@/components/ToolLayout";
+import CopyButton from "@/components/CopyButton";
 
 export default function JsonFormatter() {
   const [input, setInput] = useState("");
-  const [output, setOutput] = useState("");
-  const [error, setError] = useState("");
   const [indent, setIndent] = useState(2);
+  const deferredInput = useDeferredValue(input);
 
-  const format = () => {
+  const result = useCallback(() => {
+    if (!deferredInput.trim()) return { output: "", error: "" };
     try {
-      const parsed = JSON.parse(input);
-      setOutput(JSON.stringify(parsed, null, indent));
-      setError("");
+      const parsed = JSON.parse(deferredInput);
+      return { output: JSON.stringify(parsed, null, indent), error: "" };
     } catch (e) {
-      setError((e as Error).message);
-      setOutput("");
+      return { output: "", error: (e as Error).message };
     }
-  };
+  }, [deferredInput, indent]);
 
-  const minify = () => {
-    try {
-      const parsed = JSON.parse(input);
-      setOutput(JSON.stringify(parsed));
-      setError("");
-    } catch (e) {
-      setError((e as Error).message);
-    }
-  };
+  const { output, error } = result();
 
-  const copy = () => navigator.clipboard.writeText(output);
+  const minified = useCallback(() => {
+    try { return JSON.stringify(JSON.parse(deferredInput)); } catch { return ""; }
+  }, [deferredInput]);
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-2">JSON Formatter</h1>
-      <p className="text-gray-500 mb-6">Format, validate, and minify JSON data online. Free, fast, and private.</p>
+    <ToolLayout slug="json-formatter">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium mb-1">Input JSON</label>
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="text-xs font-medium text-gray-500">Input</label>
+            <button onClick={() => setInput("")} className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">Clear</button>
+          </div>
           <textarea
-            className="w-full h-80 p-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900 font-mono text-sm resize-y"
-            placeholder='{"key": "value"}'
+            className="w-full h-80 p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-sm resize-y focus:border-blue-500 dark:focus:border-blue-400 outline-none transition-colors"
+            placeholder='{"key": "value", "array": [1, 2, 3]}'
             value={input}
             onChange={(e) => setInput(e.target.value)}
+            spellCheck={false}
           />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">Output</label>
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="text-xs font-medium text-gray-500">Output</label>
+            <div className="flex items-center gap-2">
+              <select
+                className="text-xs border border-gray-200 dark:border-gray-700 rounded px-1.5 py-1 bg-white dark:bg-gray-900"
+                value={indent}
+                onChange={(e) => setIndent(Number(e.target.value))}
+              >
+                <option value={2}>2 spaces</option>
+                <option value={4}>4 spaces</option>
+                <option value={1}>1 space</option>
+              </select>
+              <CopyButton text={output || minified()} />
+            </div>
+          </div>
           <textarea
-            className="w-full h-80 p-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900 font-mono text-sm resize-y"
+            className={`w-full h-80 p-3 rounded-lg border text-sm resize-y outline-none transition-colors ${
+              error
+                ? "border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400"
+                : "border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900"
+            }`}
             value={error ? `Error: ${error}` : output}
             readOnly
+            spellCheck={false}
           />
         </div>
       </div>
-      <div className="flex flex-wrap gap-3 mt-4 items-center">
-        <div className="flex items-center gap-2">
-          <label className="text-sm">Indent:</label>
-          <select
-            className="border border-gray-300 dark:border-gray-700 rounded px-2 py-1 text-sm bg-white dark:bg-gray-900"
-            value={indent}
-            onChange={(e) => setIndent(Number(e.target.value))}
-          >
-            <option value={2}>2 spaces</option>
-            <option value={4}>4 spaces</option>
-            <option value={1}>Tab</option>
-          </select>
+      {output && (
+        <div className="flex gap-2 mt-3">
+          <CopyButton text={JSON.stringify(JSON.parse(input))} label="Copy Minified" />
         </div>
-        <button onClick={format} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm">Format</button>
-        <button onClick={minify} className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 text-sm">Minify</button>
-        <button onClick={copy} className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-sm">Copy</button>
-      </div>
-    </div>
+      )}
+    </ToolLayout>
   );
 }
